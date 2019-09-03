@@ -2,6 +2,7 @@ import graphene
 #import pysnooper
 import json
 from datetime import datetime
+import random
 
 class User(graphene.ObjectType):
     id = graphene.ID()
@@ -13,22 +14,21 @@ class Query(graphene.ObjectType):
     #specify field and data type
     hello = graphene.String()
     is_admin = graphene.Boolean()
-    users = graphene.List(User)
+    users = graphene.List(User,limit=graphene.Int())
     #resolver function will resolve string "world" from field hello
     #resolver functions are special types of functions specific to GraphQL operations
     #must be prepended with "resolve_" (snake case)
     def resolve_hello(self, info):
         return "world"
 
-    def resolve_is_aadmin(self, info):
+    def resolve_is_admin(self, info):
         return True
 
-    def resolve_users(self, info):
-        return [
-            User(id="1", 
-            username="Fred", 
-            created_at=datetime.now())
-        ]
+    def resolve_users(self, info, limit=None):
+        return random.sample([
+            User(id="1", username="Fred", created_at=datetime.now()),
+            User(id="2", username="Bob", created_at=datetime.now())
+        ],limit)
 
 #set Query type to Schema and save to schema variable
 schema = graphene.Schema(query=Query)
@@ -39,7 +39,7 @@ result = schema.execute(
     #note 'is_admin' is called with 'isAdmin'
     '''
     {
-        users {
+        users(limit: 1) {
             id
             username
             createdAt
