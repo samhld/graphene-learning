@@ -50,10 +50,10 @@ schema = graphene.Schema(query=Query, mutation=Mutation)
 #graphene.Schema has a method `execute` that runs a query based on a query string you pass it
 result = schema.execute(
     #even though graphene requires snake case for the resolver functions, graphql requires camel case
-    #note 'is_admin' is called with 'isAdmin'
+    #note 'create_user' is called with 'createUser'
     '''
-    mutation {
-        createUser(username: "Jeff") {
+    mutation ($username: String){
+        createUser(username: $username) {
             user {
                 id
                 username
@@ -61,7 +61,8 @@ result = schema.execute(
             }
         }
     }
-    '''
+    ''',
+    variable_values={'username': "Dave"}
 )
 
 #print odict of items in result
