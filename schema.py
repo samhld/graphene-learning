@@ -52,17 +52,15 @@ result = schema.execute(
     #even though graphene requires snake case for the resolver functions, graphql requires camel case
     #note 'create_user' is called with 'createUser'
     '''
-    mutation ($username: String){
-        createUser(username: $username) {
-            user {
-                id
-                username
-                createdAt
-            }
+    query ($limit: Int){
+        users (limit: $limit) {
+            id
+            username
+            createdAt
         }
     }
     ''',
-    variable_values={'username': "Dave"}
+    variable_values={'limit': 1}
 )
 
 #print odict of items in result
