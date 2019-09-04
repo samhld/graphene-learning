@@ -5,6 +5,10 @@ from datetime import datetime
 import random
 import uuid
 
+class Post(graphene.ObjectType):
+    title = graphene.String()
+    content = graphene.String()
+
 class User(graphene.ObjectType):
     id = graphene.ID(default_value=str(uuid.uuid4()))
     username = graphene.String()
@@ -30,8 +34,11 @@ class Query(graphene.ObjectType):
             User(id="1", username="Fred", created_at=datetime.now()),
             User(id="2", username="Bob", created_at=datetime.now())
         ],limit)
+
+#create a class/type that inherets from Mutation class
 class CreateUser(graphene.Mutation):
-    user = graphene.Field(User)
+    user = graphene.Field(User) #inherets from User class to determine user's shape
+
     #passing in arguments to Mutations requires an inner class of Arguments
     class Arguments:
         username = graphene.String()
@@ -40,9 +47,22 @@ class CreateUser(graphene.Mutation):
         user = User(username=username)
         return CreateUser(user=user)
 
+class CreatePost(graphene.Mutation):
+    post = graphene.Field(Post)
+
+    class Arguments:
+        title = graphene.String()
+        content = graphene.String()
+
+    def mutate(self, info, title, content):
+        post = Post(title=title, content=content)
+        return CreatePost(post=post)
+
+
+
 class Mutation(graphene.ObjectType):
-    #CreateUser is a class we define that inherents from this class
-    create_user = CreateUser.Field()
+    create_user = CreateUser.Field() # class we define that inherets from this Mutation class
+    create_post = CreatePost.Field()
 
 #set schema types to Schema and save to schema variable
 schema = graphene.Schema(query=Query, mutation=Mutation)
@@ -52,15 +72,16 @@ result = schema.execute(
     #even though graphene requires snake case for the resolver functions, graphql requires camel case
     #note 'create_user' is called with 'createUser'
     '''
-    query ($limit: Int){
-        users (limit: $limit) {
-            id
-            username
-            createdAt
+    mutation creatingPost ($title: String!,$content: String!){
+        createPost (title: $title, content: $content) {
+            post {
+                title
+                content
+            }
         }
     }
     ''',
-    variable_values={'limit': 1}
+    variable_values={'title': "First post",'content': "I posted my first post using my own graphql app!"}
 )
 
 #print odict of items in result
