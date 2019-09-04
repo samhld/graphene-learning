@@ -13,6 +13,10 @@ class User(graphene.ObjectType):
     id = graphene.ID(default_value=str(uuid.uuid4()))
     username = graphene.String()
     created_at = graphene.DateTime(default_value=datetime.now())
+    avatar_url = graphene.String()
+
+    def resolve_avatar_url(self, info):
+        return 'https://cloudinary.com/{}/{}'.format(self.username, self.id)
 
 #create query type
 class Query(graphene.ObjectType):
@@ -30,10 +34,10 @@ class Query(graphene.ObjectType):
         return True
 
     def resolve_users(self, info, limit=None):
-        return random.sample([
+        return [
             User(id="1", username="Fred", created_at=datetime.now()),
             User(id="2", username="Bob", created_at=datetime.now())
-        ],limit)
+        ][:limit]
 
 #create a class/type that inherets from Mutation class
 class CreateUser(graphene.Mutation):
@@ -55,6 +59,8 @@ class CreatePost(graphene.Mutation):
         content = graphene.String()
 
     def mutate(self, info, title, content):
+        if info.context.get('is_anonymous'):
+            raise Exception("Not authenticated")
         post = Post(title=title, content=content)
         return CreatePost(post=post)
 
@@ -72,20 +78,22 @@ result = schema.execute(
     #even though graphene requires snake case for the resolver functions, graphql requires camel case
     #note 'create_user' is called with 'createUser'
     '''
-    mutation creatingPost ($title: String!,$content: String!){
-        createPost (title: $title, content: $content) {
-            post {
-                title
-                content
-            }
+    {
+        users {
+            id
+            createdAt
+            username
+            avatarUrl
         }
     }
     ''',
-    variable_values={'title': "First post",'content': "I posted my first post using my own graphql app!"}
+    #if only want posts created by authenticated users, pass value "context" which can be anything
+    #context={'is_anonymous': True},
+    #variable_values={'limit': 1}
 )
 
 #print odict of items in result
-print(result.data.items())
+#print(result.data.items())
 #print result of using the 'hello' operation--the value of the field 'hello', in this case
 #print(result.data['users'])
 #print the dict of items in json
