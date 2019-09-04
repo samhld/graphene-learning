@@ -34,10 +34,10 @@ class Query(graphene.ObjectType):
         return True
 
     def resolve_users(self, info, limit=None):
-        return [
+        return random.sample([
             User(id="1", username="Fred", created_at=datetime.now()),
             User(id="2", username="Bob", created_at=datetime.now())
-        ][:limit]
+        ],limit)
 
 #create a class/type that inherets from Mutation class
 class CreateUser(graphene.Mutation):
@@ -78,8 +78,8 @@ result = schema.execute(
     #even though graphene requires snake case for the resolver functions, graphql requires camel case
     #note 'create_user' is called with 'createUser'
     '''
-    {
-        users {
+    query getUsers ($limit: Int){
+        users  (limit: $limit) {
             id
             createdAt
             username
@@ -89,7 +89,7 @@ result = schema.execute(
     ''',
     #if only want posts created by authenticated users, pass value "context" which can be anything
     #context={'is_anonymous': True},
-    #variable_values={'limit': 1}
+    variable_values={'limit': 1}
 )
 
 #print odict of items in result
